@@ -108,6 +108,49 @@ if ($align === 'right') $margin = '0 0 0 auto';
                 </div>
                 <iframe src="<?php echo $embedUrl; ?>" width="100%" height="100%" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
             </div>
+            <script>
+                (function() {
+                    const dialog = document.getElementById('br-modal-<?php echo $videoId; ?>');
+                    if (!dialog) return;
+
+                    const iframe = dialog.querySelector('iframe');
+                    if (!iframe) return;
+
+                    // Ensure YouTube API is enabled on the iframe
+                    let src = iframe.src;
+                    if (src.indexOf('enablejsapi=1') === -1) {
+                        src += (src.indexOf('?') > -1 ? '&' : '?') + 'enablejsapi=1';
+                        iframe.src = src;
+                    }
+
+                    // Load YouTube Iframe API if not already present
+                    if (!window.YT) {
+                        const tag = document.createElement('script');
+                        tag.src = 'https://www.youtube.com/iframe_api';
+                        const firstScriptTag = document.getElementsByTagName('script')[0];
+                        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+                    }
+
+                    // Initialize player and attach pause on close
+                    function onYouTubeIframeAPIReady() {
+                        new YT.Player(iframe, {
+                            events: {
+                                onReady: function(event) {
+                                    dialog.addEventListener('close', function() {
+                                        event.target.pauseVideo();
+                                    });
+                                }
+                            }
+                        });
+                    }
+
+                    if (window.YT && window.YT.Player) {
+                        onYouTubeIframeAPIReady();
+                    } else {
+                        window.onYouTubeIframeAPIReady = onYouTubeIframeAPIReady;
+                    }
+                })();
+            </script>
         </dialog>
     <?php else : ?>
         <div style="position: relative; width: 100%; aspect-ratio: <?php echo $ratio; ?>;">
